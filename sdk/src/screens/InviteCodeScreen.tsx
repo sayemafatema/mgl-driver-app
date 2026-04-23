@@ -1,28 +1,25 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { useMGLApp } from '../context/MGLContext';
+import type { AuthStackParamList } from '../types';
 
-const INVITE_CODES_DB: Record<string, string> = { 'ABC123': 'ABC Logistics Pvt. Ltd.', 'XYZ789': 'XYZ Transport' };
+type Nav = StackNavigationProp<AuthStackParamList, 'InviteCode'>;
+
+const INVITE_CODES_DB: Record<string, string> = {
+  'ABC123': 'ABC Logistics Pvt. Ltd.',
+  'XYZ789': 'XYZ Transport',
+};
 
 export function InviteCodeScreen() {
-  const { inviteCode, setInviteCode, otpError, setOtpError, setOnboardingStep, onboardingStep } = useMGLApp();
-
-  if (onboardingStep === '1c') {
-    return (
-      <View style={{ gap: 16 }}>
-        <View style={{ backgroundColor: '#dcfce7', borderWidth: 1, borderColor: '#86efac', borderRadius: 12, padding: 16, gap: 4 }}>
-          <Text style={{ fontSize: 12, color: '#15803d', fontWeight: '700' }}>Invite from</Text>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>{INVITE_CODES_DB[inviteCode] || 'Fleet Operator'}</Text>
-        </View>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827' }}>Confirm your mobile</Text>
-      </View>
-    );
-  }
+  const navigation = useNavigation<Nav>();
+  const { inviteCode, setInviteCode, otpError, setOtpError } = useMGLApp();
 
   return (
-    <View>
-      <TouchableOpacity onPress={() => setOnboardingStep('login')} activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+    <View style={{ paddingHorizontal: 24, paddingVertical: 32 }}>
+      <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 }}>
         <ChevronLeft size={20} color="#4b5563" />
         <Text style={{ color: '#4b5563' }}>Back</Text>
       </TouchableOpacity>
@@ -37,7 +34,7 @@ export function InviteCodeScreen() {
       <TouchableOpacity
         onPress={() => {
           const company = INVITE_CODES_DB[inviteCode];
-          if (company) { setOnboardingStep('1c'); }
+          if (company) { navigation.navigate('InviteConfirm'); }
           else { setOtpError('Invalid invite code'); setTimeout(() => setOtpError(''), 1500); }
         }}
         disabled={inviteCode.length < 5}
