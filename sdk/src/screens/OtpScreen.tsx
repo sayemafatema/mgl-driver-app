@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import { useMGLApp } from '../context/MGLContext';
+import type { OnboardingStep } from '../types';
 
 type OtpVariant = 'login' | 'onboarding' | 'reset';
 
@@ -20,18 +21,26 @@ export function OtpScreen({ variant = 'login' }: OtpScreenProps) {
     mobileNumber, otpDigits, setOtpDigits, otpError, setOtpError,
     otpCountdown, setOtpCountdown, handleLoginOtpVerify,
     loginOtpRefs, onboardingOtpRefs, resetOtpRefs,
-    setOnboardingStep, pin, setPin, setPinConfirm, setPinError, setNewPin,
+    setOnboardingStep, setPin, setPinConfirm, setPinError, setNewPin,
   } = useMGLApp();
 
   const refs = variant === 'login' ? loginOtpRefs : variant === 'onboarding' ? onboardingOtpRefs : resetOtpRefs;
-  const backStep = variant === 'login' ? 'login' : variant === 'onboarding' ? '1c' : 'forgot_pin';
+  const backStep: OnboardingStep = variant === 'login' ? 'login' : variant === 'onboarding' ? '1c' : 'forgot_pin';
 
   function handleVerify() {
     const code = otpDigits.join('');
     if (code === '123456') {
-      if (variant === 'login') handleLoginOtpVerify();
-      else if (variant === 'onboarding') setOnboardingStep('1e');
-      else { setPin(''); setPinConfirm(''); setPinError(''); setNewPin(''); setOnboardingStep('set_pin'); }
+      if (variant === 'login') {
+        handleLoginOtpVerify();
+      } else if (variant === 'onboarding') {
+        setOnboardingStep('1e');
+      } else {
+        setPin('');
+        setPinConfirm('');
+        setPinError('');
+        setNewPin('');
+        setOnboardingStep('set_pin');
+      }
     } else {
       setOtpError('Incorrect OTP. Try again.');
       setTimeout(() => { setOtpDigits(Array(6).fill('')); setOtpError(''); }, 1500);
@@ -40,7 +49,11 @@ export function OtpScreen({ variant = 'login' }: OtpScreenProps) {
 
   return (
     <View>
-      <TouchableOpacity onPress={() => setOnboardingStep(backStep as any)} activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+      <TouchableOpacity
+        onPress={() => setOnboardingStep(backStep)}
+        activeOpacity={0.7}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 }}
+      >
         <ChevronLeft size={20} color="#4b5563" />
         <Text style={{ color: '#4b5563' }}>Back</Text>
       </TouchableOpacity>
