@@ -12,6 +12,7 @@ export interface MGLSdkContextValue {
   isOpen: boolean;
   open: () => void;
   close: () => void;
+  closeRef: React.MutableRefObject<(() => void) | null>;
 }
 
 const MGLSdkContext = createContext<MGLSdkContextValue | null>(null);
@@ -102,7 +103,11 @@ export function MGLProvider({ children, config = {} }: { children: ReactNode; co
 
   const [isOpen, setIsOpen] = useState(false);
   const open = () => setIsOpen(true);
-  const close = () => setIsOpen(false);
+  const closeRef = useRef<(() => void) | null>(null);
+  const close = () => {
+    if (closeRef.current) closeRef.current();
+    else setIsOpen(false);
+  };
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -202,7 +207,7 @@ export function MGLProvider({ children, config = {} }: { children: ReactNode; co
 
   function onAuthComplete() { setIsAuthenticated(true); }
 
-  const sdkValue: MGLSdkContextValue = { config, isOpen, open, close };
+  const sdkValue: MGLSdkContextValue = { config, isOpen, open, close, closeRef };
 
   const appValue: MGLAppContextValue = {
     isAuthenticated, onAuthComplete,
