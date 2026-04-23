@@ -1,14 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { useMGLApp } from '../context/MGLContext';
-import type { OnboardingStep } from '../types';
+import type { AuthStackParamList } from '../types';
 
+type Nav = StackNavigationProp<AuthStackParamList>;
 type OtpVariant = 'login' | 'onboarding' | 'reset';
-
-interface OtpScreenProps {
-  variant?: OtpVariant;
-}
 
 const VARIANT_TITLE: Record<OtpVariant, string> = {
   login: 'Verify mobile',
@@ -16,30 +15,35 @@ const VARIANT_TITLE: Record<OtpVariant, string> = {
   reset: 'Enter OTP',
 };
 
-export function OtpScreen({ variant = 'login' }: OtpScreenProps) {
+export function OtpScreen({ variant = 'login' }: { variant?: OtpVariant }) {
+  const navigation = useNavigation<Nav>();
   const {
     mobileNumber, otpDigits, setOtpDigits, otpError, setOtpError,
-    otpCountdown, setOtpCountdown, handleLoginOtpVerify,
+    otpCountdown, setOtpCountdown,
     loginOtpRefs, onboardingOtpRefs, resetOtpRefs,
-    setOnboardingStep, setPin, setPinConfirm, setPinError, setNewPin,
+    setPin, setPinConfirm, setPinError, setNewPin, onAuthComplete,
+    loginPin, setLoginPin, setLoginPinError, setWrongAttempts, setDisableNumpad,
   } = useMGLApp();
 
   const refs = variant === 'login' ? loginOtpRefs : variant === 'onboarding' ? onboardingOtpRefs : resetOtpRefs;
-  const backStep: OnboardingStep = variant === 'login' ? 'login' : variant === 'onboarding' ? '1c' : 'forgot_pin';
 
   function handleVerify() {
     const code = otpDigits.join('');
     if (code === '123456') {
       if (variant === 'login') {
-        handleLoginOtpVerify();
+        setLoginPin('');
+        setLoginPinError('');
+        setWrongAttempts(0);
+        setDisableNumpad(false);
+        navigation.navigate('PinLogin');
       } else if (variant === 'onboarding') {
-        setOnboardingStep('1e');
+        navigation.navigate('SetPin', { mode: 'onboarding' });
       } else {
         setPin('');
         setPinConfirm('');
         setPinError('');
         setNewPin('');
-        setOnboardingStep('set_pin');
+        navigation.navigate('SetPin', { mode: 'reset' });
       }
     } else {
       setOtpError('Incorrect OTP. Try again.');
@@ -49,11 +53,7 @@ export function OtpScreen({ variant = 'login' }: OtpScreenProps) {
 
   return (
     <View>
-      <TouchableOpacity
-        onPress={() => setOnboardingStep(backStep)}
-        activeOpacity={0.7}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 }}
-      >
+      <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 }}>
         <ChevronLeft size={20} color="#4b5563" />
         <Text style={{ color: '#4b5563' }}>Back</Text>
       </TouchableOpacity>
@@ -71,9 +71,9 @@ export function OtpScreen({ variant = 'login' }: OtpScreenProps) {
             value={otpDigits[i] || ''}
             onChangeText={(val) => {
               const digit = val.replace(/\D/g, '').slice(-1);
-              const newDigits = [...otpDigits];
-              newDigits[i] = digit;
-              setOtpDigits(newDigits);
+              const next = [...otpDigits];
+              next[i] = digit;
+              setOtpDigits(next);
               if (digit && i < 5) refs.current[i + 1]?.focus();
             }}
             keyboardType="numeric"
