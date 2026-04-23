@@ -3,17 +3,25 @@ import { Modal } from 'react-native';
 import { useMGL } from '../context/MGLContext';
 import { MGLApp } from './MGLApp';
 
-export function MGLModal() {
+interface MGLModalProps {
+  visible?: boolean;
+  onClose?: () => void;
+}
+
+export function MGLModal({ visible: visibleProp, onClose: onCloseProp }: MGLModalProps) {
   const { isOpen, close } = useMGL();
+
+  const visible = visibleProp !== undefined ? visibleProp : isOpen;
+  const handleClose = onCloseProp ?? close;
 
   return (
     <Modal
-      visible={isOpen}
+      visible={visible}
       animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={close}
+      presentationStyle="pageSheet"
+      onRequestClose={handleClose}
     >
-      <MGLApp onClose={close} />
+      <MGLApp />
     </Modal>
   );
 }
