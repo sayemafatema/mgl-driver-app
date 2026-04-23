@@ -1,10 +1,16 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { CheckCircle, Clock, MapPin } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { useMGLApp } from '../context/MGLContext';
+import type { MainStackParamList } from '../types';
+
+type Nav = StackNavigationProp<MainStackParamList, 'AssignmentAccepted'>;
 
 export function AssignmentAcceptedScreen() {
-  const { assignment, setCurrentMainScreen, setActiveAssignment, setActiveTab } = useMGLApp();
+  const navigation = useNavigation<Nav>();
+  const { assignment, setActiveAssignment } = useMGLApp();
 
   return (
     <ScrollView contentContainerStyle={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 24, backgroundColor: '#f0fdf4' }}>
@@ -16,7 +22,6 @@ export function AssignmentAcceptedScreen() {
 
       <View style={{ width: '100%', backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 16, gap: 12, marginTop: 16 }}>
         <Text style={{ fontSize: 14, fontWeight: '700', color: '#111827' }}>What's now unlocked</Text>
-
         {assignment.authMode === 'vehicle_linked' && (
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <CheckCircle size={20} color="#16a34a" />
@@ -47,7 +52,7 @@ export function AssignmentAcceptedScreen() {
       </View>
 
       <TouchableOpacity
-        onPress={() => { setActiveAssignment(null); setCurrentMainScreen('home_empty'); setActiveTab('assignments'); }}
+        onPress={() => { setActiveAssignment(null); navigation.navigate('Tabs', { screen: 'Assignments' }); }}
         activeOpacity={0.7}
         style={{ width: '100%', backgroundColor: '#15803d', borderRadius: 16, paddingVertical: 14, alignItems: 'center', marginTop: 16 }}
       >
