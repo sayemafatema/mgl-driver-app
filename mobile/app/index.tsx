@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { MGLProvider, MGLLaunchButton, MGLModal } from '../../sdk/src';
+import { MGLProvider, MGLLaunchButton } from '../../sdk/src';
 
 export default function App() {
   return (
@@ -8,7 +8,6 @@ export default function App() {
       <View style={styles.container}>
         <MGLLaunchButton label="Open MGL Fleet Connect" />
       </View>
-      <MGLModal />
     </MGLProvider>
   );
 }
