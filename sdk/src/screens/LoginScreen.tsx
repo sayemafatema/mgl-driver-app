@@ -1,12 +1,18 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TextInput, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { useMGLApp } from '../context/MGLContext';
+import type { AuthStackParamList } from '../types';
+
+type Nav = StackNavigationProp<AuthStackParamList, 'Login'>;
 
 export function LoginScreen() {
-  const { mobileNumber, setMobileNumber, setOtpDigits, setOtpError, setOtpCountdown, setOnboardingStep, setInviteCode } = useMGLApp();
+  const navigation = useNavigation<Nav>();
+  const { mobileNumber, setMobileNumber, setOtpDigits, setOtpError, setOtpCountdown, setInviteCode } = useMGLApp();
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 32 }}>
       <View style={{ alignItems: 'center', marginBottom: 32 }}>
         <Image source={require('../assets/mgl-logo.png')} style={{ width: 72, height: 72, resizeMode: 'contain' }} />
         <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827', marginTop: 12 }}>MGL Fleet Connect</Text>
@@ -31,7 +37,7 @@ export function LoginScreen() {
           </View>
         </View>
         <TouchableOpacity
-          onPress={() => { setOtpDigits(Array(6).fill('')); setOtpError(''); setOtpCountdown(30); setOnboardingStep('login_otp'); }}
+          onPress={() => { setOtpDigits(Array(6).fill('')); setOtpError(''); setOtpCountdown(30); navigation.navigate('LoginOtp'); }}
           disabled={mobileNumber.length !== 10}
           activeOpacity={0.7}
           style={{ backgroundColor: mobileNumber.length !== 10 ? '#d1d5db' : '#15803d', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
@@ -44,7 +50,7 @@ export function LoginScreen() {
           <View style={{ flex: 1, height: 1, backgroundColor: '#d1d5db' }} />
         </View>
         <TouchableOpacity
-          onPress={() => { setInviteCode(''); setOnboardingStep('invite_code'); }}
+          onPress={() => { setInviteCode(''); navigation.navigate('InviteCode'); }}
           activeOpacity={0.7}
           style={{ borderWidth: 1, borderColor: '#d1d5db', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
         >
