@@ -1,11 +1,17 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Modal, Pressable } from 'react-native';
-import { ChevronLeft, X, CheckCircle, Clock, MapPin } from 'lucide-react-native';
+import { ChevronLeft, X, CheckCircle } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { useMGLApp } from '../context/MGLContext';
+import type { MainStackParamList } from '../types';
+
+type Nav = StackNavigationProp<MainStackParamList, 'PairingCode'>;
 
 export function PairingCodeScreen() {
+  const navigation = useNavigation<Nav>();
   const {
-    assignment, setCurrentMainScreen,
+    assignment,
     pairingDigits, setPairingDigits, pairingAttempts, setPairingAttempts,
     pairingSuccess, setPairingSuccess, pairingError, setPairingError,
     pairingInputRefs, showPairingHelp, setShowPairingHelp,
@@ -15,11 +21,7 @@ export function PairingCodeScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <ScrollView contentContainerStyle={{ padding: 24, gap: 20 }}>
-        <TouchableOpacity
-          onPress={() => setCurrentMainScreen('assignment_notification')}
-          activeOpacity={0.7}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
-        >
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <ChevronLeft size={20} color="#4b5563" />
           <Text style={{ color: '#4b5563' }}>Back</Text>
         </TouchableOpacity>
@@ -78,9 +80,7 @@ export function PairingCodeScreen() {
             <Text style={{ fontSize: 14, color: '#4b5563' }}>Activating your assignment...</Text>
           </View>
         )}
-        {pairingError && !pairingSuccess && (
-          <Text style={{ textAlign: 'center', fontSize: 14, color: '#dc2626' }}>{pairingError}</Text>
-        )}
+        {pairingError && !pairingSuccess && <Text style={{ textAlign: 'center', fontSize: 14, color: '#dc2626' }}>{pairingError}</Text>}
 
         {pairingAttempts >= 3 && (
           <View style={{ backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, padding: 16, gap: 8 }}>
@@ -96,7 +96,7 @@ export function PairingCodeScreen() {
               const validCode = assignment?.validPairingCode || bindings[3]?.validPairingCode;
               if (code === validCode) {
                 setPairingSuccess(true);
-                setTimeout(() => setCurrentMainScreen('assignment_accepted'), 1500);
+                setTimeout(() => navigation.navigate('AssignmentAccepted', { bindingId: assignment.id }), 1500);
               } else {
                 const attempts = pairingAttempts + 1;
                 setPairingAttempts(attempts);
@@ -113,7 +113,7 @@ export function PairingCodeScreen() {
         )}
 
         {pairingAttempts >= 3 && (
-          <TouchableOpacity onPress={() => setCurrentMainScreen('home_empty')} activeOpacity={0.7} style={{ backgroundColor: '#d1d5db', borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => navigation.popToTop()} activeOpacity={0.7} style={{ backgroundColor: '#d1d5db', borderRadius: 16, paddingVertical: 14, alignItems: 'center' }}>
             <Text style={{ color: '#374151', fontWeight: '600' }}>Close</Text>
           </TouchableOpacity>
         )}
