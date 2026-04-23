@@ -10,6 +10,7 @@ import { SetPinScreen } from '../screens/SetPinScreen';
 import { ConfirmPinScreen } from '../screens/ConfirmPinScreen';
 import { ForgotPinScreen } from '../screens/ForgotPinScreen';
 import { InviteCodeScreen } from '../screens/InviteCodeScreen';
+import { InviteConfirmScreen } from '../screens/InviteConfirmScreen';
 import { RegisteredScreen } from '../screens/RegisteredScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ScanScreen } from '../screens/ScanScreen';
@@ -20,54 +21,29 @@ import { AssignmentNotificationScreen } from '../screens/AssignmentNotificationS
 import { PairingCodeScreen } from '../screens/PairingCodeScreen';
 import { AssignmentAcceptedScreen } from '../screens/AssignmentAcceptedScreen';
 
-function AuthNavigator() {
-  const { onboardingStep, mobileNumber, setMobileNumber, setOtpDigits, setOtpError, setOtpCountdown, setOnboardingStep } = useMGLApp();
-  const { onClose } = useMGLApp();
+const AUTH_SCREEN_MAP: Record<string, React.ReactNode> = {};
 
-  const INVITE_CODES_DB: Record<string, string> = { 'ABC123': 'ABC Logistics Pvt. Ltd.', 'XYZ789': 'XYZ Transport' };
-
-  let screen: React.ReactNode;
-  switch (onboardingStep) {
-    case 'login':        screen = <LoginScreen />; break;
-    case 'login_otp':    screen = <OtpScreen variant="login" />; break;
-    case 'pin_login':    screen = <PinLoginScreen />; break;
-    case 'set_pin':      screen = <SetPinScreen />; break;
-    case 'confirm_pin':  screen = <ConfirmPinScreen />; break;
-    case 'forgot_pin':   screen = <ForgotPinScreen />; break;
-    case 'forgot_otp':   screen = <OtpScreen variant="reset" />; break;
-    case 'invite_code':  screen = <InviteCodeScreen />; break;
-    case 'registered':   screen = <RegisteredScreen />; break;
-    case '1c': {
-      const { inviteCode } = useMGLApp();
-      screen = (
-        <View style={{ gap: 16 }}>
-          <View style={{ backgroundColor: '#dcfce7', borderWidth: 1, borderColor: '#86efac', borderRadius: 12, padding: 16, gap: 4 }}>
-            <Text style={{ fontSize: 12, color: '#15803d', fontWeight: '700' }}>Invite from</Text>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>{INVITE_CODES_DB[inviteCode] || 'Fleet Operator'}</Text>
-          </View>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: '#111827' }}>Confirm your mobile</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <View style={{ paddingHorizontal: 12, paddingVertical: 12, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 12, backgroundColor: '#f9fafb' }}>
-              <Text style={{ color: '#4b5563', fontWeight: '500', fontSize: 14 }}>+91</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            onPress={() => { setOtpDigits(Array(6).fill('')); setOtpError(''); setOtpCountdown(30); setOnboardingStep('1d'); }}
-            disabled={mobileNumber.length !== 10}
-            activeOpacity={0.7}
-            style={{ backgroundColor: mobileNumber.length !== 10 ? '#d1d5db' : '#15803d', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
-          >
-            <Text style={{ color: '#fff', fontWeight: '600' }}>Send OTP</Text>
-          </TouchableOpacity>
-        </View>
-      );
-      break;
-    }
-    case '1d': screen = <OtpScreen variant="onboarding" />; break;
-    case '1e': screen = <SetPinScreen />; break;
-    case '1f': screen = <ConfirmPinScreen />; break;
-    default:   screen = <LoginScreen />;
+function renderAuthScreen(step: string): React.ReactNode {
+  switch (step) {
+    case 'login':       return <LoginScreen />;
+    case 'login_otp':  return <OtpScreen variant="login" />;
+    case 'pin_login':  return <PinLoginScreen />;
+    case 'set_pin':    return <SetPinScreen />;
+    case 'confirm_pin': return <ConfirmPinScreen />;
+    case 'forgot_pin': return <ForgotPinScreen />;
+    case 'forgot_otp': return <OtpScreen variant="reset" />;
+    case 'invite_code': return <InviteCodeScreen />;
+    case '1c':         return <InviteConfirmScreen />;
+    case '1d':         return <OtpScreen variant="onboarding" />;
+    case '1e':         return <SetPinScreen />;
+    case '1f':         return <ConfirmPinScreen />;
+    case 'registered': return <RegisteredScreen />;
+    default:           return <LoginScreen />;
   }
+}
+
+function AuthNavigator() {
+  const { onboardingStep, onClose } = useMGLApp();
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -76,15 +52,18 @@ function AuthNavigator() {
           <X size={24} color="#6b7280" />
         </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }} keyboardShouldPersistTaps="handled">
-        {screen}
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {renderAuthScreen(onboardingStep)}
       </ScrollView>
     </View>
   );
 }
 
 function TabBar() {
-  const { activeTab, setActiveTab, pendingAssignmentCount, sessionState } = useMGLApp();
+  const { activeTab, setActiveTab, pendingAssignmentCount } = useMGLApp();
 
   const tabs = [
     { id: 'card' as const, label: 'Home', Icon: Home },
