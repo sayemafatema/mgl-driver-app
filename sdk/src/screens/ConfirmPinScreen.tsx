@@ -1,24 +1,26 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { StackNavigationProp, RouteProp } from '@react-navigation/stack';
 import { useMGLApp } from '../context/MGLContext';
 import { Numpad } from '../components/Numpad';
 import { PinDisplay } from '../components/PinDisplay';
-import type { OnboardingStep } from '../types';
+import type { AuthStackParamList, SetPinMode } from '../types';
+
+type Nav = StackNavigationProp<AuthStackParamList, 'ConfirmPin'>;
+type Route = RouteProp<AuthStackParamList, 'ConfirmPin'>;
 
 export function ConfirmPinScreen() {
-  const {
-    pin, setPin, pinConfirm, setPinConfirm, pinError, setPinError,
-    setOnboardingStep, onboardingStep,
-  } = useMGLApp();
-
-  const prevStep: OnboardingStep = onboardingStep === '1f' ? '1e' : 'set_pin';
-  const successStep: OnboardingStep = onboardingStep === '1f' ? 'registered' : 'complete';
+  const navigation = useNavigation<Nav>();
+  const route = useRoute<Route>();
+  const mode: SetPinMode = route.params?.mode ?? 'onboarding';
+  const { pin, setPin, pinConfirm, setPinConfirm, pinError, setPinError, onAuthComplete } = useMGLApp();
 
   return (
-    <View>
+    <View style={{ paddingHorizontal: 24, paddingVertical: 32 }}>
       <TouchableOpacity
-        onPress={() => { setPin(''); setOnboardingStep(prevStep); }}
+        onPress={() => { setPin(''); navigation.goBack(); }}
         activeOpacity={0.7}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 }}
       >
@@ -36,7 +38,11 @@ export function ConfirmPinScreen() {
             setPinConfirm(next);
             if (next.length === 6) {
               if (next === pin) {
-                setOnboardingStep(successStep);
+                if (mode === 'onboarding') {
+                  navigation.navigate('Registered');
+                } else {
+                  onAuthComplete();
+                }
               } else {
                 setPinError('PINs do not match');
                 setTimeout(() => { setPinConfirm(''); setPinError(''); }, 1000);
