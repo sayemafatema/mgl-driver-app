@@ -4,6 +4,7 @@ import { ChevronLeft } from 'lucide-react-native';
 import { useMGLApp } from '../context/MGLContext';
 import { Numpad } from '../components/Numpad';
 import { PinDisplay } from '../components/PinDisplay';
+import type { OnboardingStep } from '../types';
 
 export function ConfirmPinScreen() {
   const {
@@ -11,13 +12,13 @@ export function ConfirmPinScreen() {
     setOnboardingStep, onboardingStep,
   } = useMGLApp();
 
-  const prevStep = onboardingStep === '1f' ? '1e' : 'set_pin';
-  const successStep = onboardingStep === '1f' ? 'registered' : 'complete';
+  const prevStep: OnboardingStep = onboardingStep === '1f' ? '1e' : 'set_pin';
+  const successStep: OnboardingStep = onboardingStep === '1f' ? 'registered' : 'complete';
 
   return (
     <View>
       <TouchableOpacity
-        onPress={() => { setPin(''); setOnboardingStep(prevStep as any); }}
+        onPress={() => { setPin(''); setOnboardingStep(prevStep); }}
         activeOpacity={0.7}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 }}
       >
@@ -34,8 +35,12 @@ export function ConfirmPinScreen() {
             const next = pinConfirm + d;
             setPinConfirm(next);
             if (next.length === 6) {
-              if (next === pin) { setOnboardingStep(successStep as any); }
-              else { setPinError('PINs do not match'); setTimeout(() => { setPinConfirm(''); setPinError(''); }, 1000); }
+              if (next === pin) {
+                setOnboardingStep(successStep);
+              } else {
+                setPinError('PINs do not match');
+                setTimeout(() => { setPinConfirm(''); setPinError(''); }, 1000);
+              }
             }
           }
         }}
