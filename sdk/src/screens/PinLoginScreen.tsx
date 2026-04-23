@@ -1,24 +1,28 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { useMGLApp } from '../context/MGLContext';
 import { Numpad } from '../components/Numpad';
 import { PinDisplay } from '../components/PinDisplay';
+import type { AuthStackParamList } from '../types';
 
-const DRIVER_NAME = 'Ravi Sharma';
+type Nav = StackNavigationProp<AuthStackParamList, 'PinLogin'>;
 
 export function PinLoginScreen() {
+  const navigation = useNavigation<Nav>();
   const {
     loginPin, setLoginPin, loginPinError, setLoginPinError,
     wrongAttempts, setWrongAttempts, disableNumpad, setDisableNumpad,
-    setOnboardingStep, setOtpDigits, setOtpError, setOtpCountdown,
+    setOtpDigits, setOtpError, setOtpCountdown, driver, onAuthComplete,
   } = useMGLApp();
 
   return (
-    <View>
+    <View style={{ paddingHorizontal: 24, paddingVertical: 32 }}>
       <View style={{ alignItems: 'center', marginBottom: 32 }}>
         <Image source={require('../assets/mgl-logo.png')} style={{ width: 48, height: 48, resizeMode: 'contain' }} />
         <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>Welcome back</Text>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginTop: 4 }}>{DRIVER_NAME}</Text>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginTop: 4 }}>{driver.name}</Text>
       </View>
       <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', textAlign: 'center', marginBottom: 8 }}>Enter your PIN</Text>
       <PinDisplay value={loginPin} error={!!loginPinError} />
@@ -31,7 +35,7 @@ export function PinLoginScreen() {
             setLoginPin(next);
             if (next.length === 6) {
               if (next === '123456') {
-                setOnboardingStep('complete');
+                onAuthComplete();
               } else {
                 const attempts = wrongAttempts + 1;
                 setWrongAttempts(attempts);
@@ -45,7 +49,7 @@ export function PinLoginScreen() {
         onBackspace={() => setLoginPin(loginPin.slice(0, -1))}
       />
       <TouchableOpacity
-        onPress={() => { setOtpDigits(Array(6).fill('')); setOtpError(''); setOtpCountdown(30); setOnboardingStep('forgot_pin'); }}
+        onPress={() => { setOtpDigits(Array(6).fill('')); setOtpError(''); setOtpCountdown(30); navigation.navigate('ForgotPin'); }}
         activeOpacity={0.7}
         style={{ marginTop: 16 }}
       >
