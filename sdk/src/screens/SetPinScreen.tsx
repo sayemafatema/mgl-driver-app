@@ -3,10 +3,11 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useMGLApp } from '../context/MGLContext';
 import { Numpad } from '../components/Numpad';
 import { PinDisplay } from '../components/PinDisplay';
+import type { OnboardingStep } from '../types';
 
 export function SetPinScreen() {
   const { pin, setPin, setPinConfirm, setPinError, setOnboardingStep, onboardingStep } = useMGLApp();
-  const nextStep = onboardingStep === '1e' ? '1f' : 'confirm_pin';
+  const nextStep: OnboardingStep = onboardingStep === '1e' ? '1f' : 'confirm_pin';
 
   return (
     <View>
@@ -15,7 +16,7 @@ export function SetPinScreen() {
       <PinDisplay value={pin} />
       <Numpad onPress={(d) => { if (pin.length < 6) setPin(pin + d); }} onBackspace={() => setPin(pin.slice(0, -1))} />
       <TouchableOpacity
-        onPress={() => { setPinConfirm(''); setPinError(''); setOnboardingStep(nextStep as any); }}
+        onPress={() => { setPinConfirm(''); setPinError(''); setOnboardingStep(nextStep); }}
         disabled={pin.length !== 6}
         activeOpacity={0.7}
         style={{ backgroundColor: pin.length !== 6 ? '#d1d5db' : '#15803d', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 }}
