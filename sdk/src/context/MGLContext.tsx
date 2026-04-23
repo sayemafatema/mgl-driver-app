@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { TextInput } from 'react-native';
 import type {
-  MGLConfig, Binding, OnboardingStep, ActiveTab, MainScreen,
-  SessionState, TxnFilter,
+  MGLConfig, Binding, Driver, Transaction, PairedVehicle,
+  OnboardingStep, ActiveTab, MainScreen, SessionState, TxnFilter,
 } from '../types';
-import { MOCK_BINDINGS, MOCK_TRANSACTIONS, MOCK_PAIRED_VEHICLES, MOCK_DRIVER } from '../api/client';
+import { buildClient, MOCK_BINDINGS, MOCK_TRANSACTIONS, MOCK_PAIRED_VEHICLES, MOCK_DRIVER } from '../api/client';
 
 // ── Public SDK context (for host app) ─────────────────────────────────────────
 
@@ -26,7 +26,6 @@ export function useMGL(): MGLSdkContextValue {
 // ── Internal app context (for SDK screens) ────────────────────────────────────
 
 export interface MGLAppContextValue {
-  // Auth state
   onboardingStep: OnboardingStep;
   setOnboardingStep: (v: OnboardingStep) => void;
   mobileNumber: string;
@@ -63,8 +62,6 @@ export interface MGLAppContextValue {
   setOtpError: (v: string) => void;
   successToast: string | null;
   setSuccessToast: (v: string | null) => void;
-
-  // Main app state
   activeTab: ActiveTab;
   setActiveTab: (v: ActiveTab) => void;
   txnFilter: TxnFilter;
@@ -111,21 +108,15 @@ export interface MGLAppContextValue {
   setSelectedTripBinding: (v: Binding | null) => void;
   declineBndId: string | null;
   setDeclineBndId: (v: string | null) => void;
-
-  // Refs
   loginOtpRefs: React.MutableRefObject<(TextInput | null)[]>;
   onboardingOtpRefs: React.MutableRefObject<(TextInput | null)[]>;
   resetOtpRefs: React.MutableRefObject<(TextInput | null)[]>;
   sessionOtpRefs: React.MutableRefObject<(TextInput | null)[]>;
   pairingInputRefs: React.MutableRefObject<(TextInput | null)[]>;
-
-  // Data
   bindings: Binding[];
-  driver: typeof MOCK_DRIVER;
-  pairedVehicles: typeof MOCK_PAIRED_VEHICLES;
-  mockTransactions: typeof MOCK_TRANSACTIONS;
-
-  // Derived
+  driver: Driver;
+  pairedVehicles: PairedVehicle[];
+  mockTransactions: Transaction[];
   activeCards: Binding[];
   currentCard: Binding | undefined;
   pendingAssignmentCount: number;
@@ -133,16 +124,12 @@ export interface MGLAppContextValue {
   pendingBindings: Binding[];
   repairBindings: Binding[];
   assignment: Binding;
-
-  // Handlers
   handlePinInput: (digit: string, isConfirm?: boolean) => void;
   handlePinBackspace: (isConfirm?: boolean) => void;
   handleSessionPinInput: (digit: string) => void;
   handleSessionPinBackspace: () => void;
   handleLoginOtpVerify: () => void;
   handleLogout: () => void;
-
-  // SDK close
   onClose: () => void;
 }
 
@@ -157,6 +144,8 @@ export function useMGLApp(): MGLAppContextValue {
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 export function MGLProvider({ children, config = {} }: { children: ReactNode; config?: MGLConfig }) {
+  const client = buildClient(config);
+
   const [isOpen, setIsOpen] = useState(false);
   const open = () => setIsOpen(true);
   const close = () => setIsOpen(false);
@@ -206,18 +195,30 @@ export function MGLProvider({ children, config = {} }: { children: ReactNode; co
   const [selectedTripBinding, setSelectedTripBinding] = useState<Binding | null>(null);
   const [declineBndId, setDeclineBndId] = useState<string | null>(null);
 
+  // Data state — seeded from mock, replaced via API when real mode
+  const [bindings, setBindings] = useState<Binding[]>(MOCK_BINDINGS);
+  const [driver, setDriver] = useState<Driver>(MOCK_DRIVER);
+  const [pairedVehicles, setPairedVehicles] = useState<PairedVehicle[]>(MOCK_PAIRED_VEHICLES);
+  const [mockTransactions, setMockTransactions] = useState<Transaction[]>(MOCK_TRANSACTIONS);
+
+  // Load real data when authenticated (non-mock mode)
+  useEffect(() => {
+    if (onboardingStep === 'complete' && !config.mockMode && config.baseUrl) {
+      Promise.all([
+        client.getBindings().then(setBindings).catch(() => {}),
+        client.getDriver().then(setDriver).catch(() => {}),
+        client.getPairedVehicles().then(setPairedVehicles).catch(() => {}),
+        client.getTransactions().then(setMockTransactions).catch(() => {}),
+      ]);
+    }
+  }, [onboardingStep, config.mockMode, config.baseUrl]);
+
   // Refs
   const loginOtpRefs = useRef<(TextInput | null)[]>([null, null, null, null, null, null]);
   const onboardingOtpRefs = useRef<(TextInput | null)[]>([null, null, null, null, null, null]);
   const resetOtpRefs = useRef<(TextInput | null)[]>([null, null, null, null, null, null]);
   const sessionOtpRefs = useRef<(TextInput | null)[]>([null, null, null, null, null, null]);
   const pairingInputRefs = useRef<(TextInput | null)[]>([null, null, null, null, null, null]);
-
-  // Data (could be fetched from API in real mode)
-  const bindings = MOCK_BINDINGS;
-  const driver = MOCK_DRIVER;
-  const pairedVehicles = MOCK_PAIRED_VEHICLES;
-  const mockTransactions = MOCK_TRANSACTIONS;
 
   // Derived
   const activeCards = bindings.filter(b => b.paired && b.state === 'ACTIVE');
@@ -228,7 +229,7 @@ export function MGLProvider({ children, config = {} }: { children: ReactNode; co
   const activeBindings = bindings.filter(b => b.paired && b.state === 'ACTIVE');
   const pendingBindings = bindings.filter(b => b.state === 'PENDING_ACCEPTANCE');
   const repairBindings = bindings.filter(b => !b.paired && b.state === 'ACTIVE');
-  const assignment = activeAssignment || bindings[3];
+  const assignment = activeAssignment ?? bindings.find(b => b.state === 'PENDING_ACCEPTANCE') ?? bindings[3];
 
   // Init selected scan binding
   useEffect(() => {
@@ -245,7 +246,7 @@ export function MGLProvider({ children, config = {} }: { children: ReactNode; co
     return () => clearTimeout(timer);
   }, [otpCountdown]);
 
-  // Auto-verify OTP on login when 6 digits entered
+  // Auto-verify OTP on login
   useEffect(() => {
     if (otpDigits.join('').length === 6 && onboardingStep === 'login_otp') {
       handleLoginOtpVerify();
@@ -260,7 +261,6 @@ export function MGLProvider({ children, config = {} }: { children: ReactNode; co
     }
   }, [currentMainScreen]);
 
-  // Handlers
   function handlePinInput(digit: string, isConfirm = false) {
     if (isConfirm) { if (pinConfirm.length < 6) setPinConfirm(pinConfirm + digit); }
     else { if (pin.length < 6) setPin(pin + digit); }
