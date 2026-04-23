@@ -3,13 +3,16 @@
   "version": "0.1.0",
   "description": "MGL Fleet Connect Driver SDK — drop-in React Native UI for CNG fleet fueling",
   "source": "src/index.ts",
-  "main": "src/index.ts",
   "react-native": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "files": [
-    "src"
+    "src",
+    "dist"
   ],
   "scripts": {
+    "build": "tsup",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
@@ -24,6 +27,7 @@
   "devDependencies": {
     "@types/react": "^18.3.0",
     "@types/react-native": "^0.73.0",
+    "tsup": "^8.0.0",
     "typescript": "^5.3.0"
   }
 }
