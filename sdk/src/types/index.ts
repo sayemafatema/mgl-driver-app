@@ -1,12 +1,14 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
+
 export type AuthMode = 'vehicle_linked' | 'shift_based' | 'trip_linked';
-export type BindingState = 'ACTIVE' | 'PENDING_ACCEPTANCE' | 'REVOKED' | 'EXPIRED';
+export type BindingState = 'ACTIVE' | 'PENDING_ACCEPTANCE' | 'INACTIVE';
 export type ScanPayStatus =
   | 'always_available'
   | 'in_window'
-  | 'trip_window'
+  | 'out_of_window'
   | 'locked_unpaired'
   | 'locked_repair'
-  | 'out_of_window';
+  | 'locked_pending';
 
 export interface Binding {
   id: string;
@@ -17,8 +19,8 @@ export interface Binding {
   paired: boolean;
   scanPayStatus: ScanPayStatus;
   balance: number;
-  cardBalance?: number;
-  incentiveBalance?: number;
+  cardBalance: number;
+  incentiveBalance: number;
   spendLimit: number;
   shiftDays?: string[];
   shiftStart?: string;
@@ -35,8 +37,10 @@ export interface Binding {
   validPairingCode?: string;
 }
 
-export interface PendingBinding extends Binding {
-  state: 'PENDING_ACCEPTANCE';
+export interface PendingBinding {
+  id: string;
+  vrn: string;
+  fo: string;
   assignedBy: string;
 }
 
@@ -55,9 +59,9 @@ export interface Transaction {
   vrn: string;
   amount: number;
   date: string;
-  type: 'Fueling' | 'Credit';
+  type: string;
   quantity?: string;
-  status: 'Success' | 'Failed' | 'Pending';
+  status: string;
 }
 
 export interface PairedVehicle {
@@ -72,43 +76,8 @@ export interface MGLConfig {
   baseUrl?: string;
   apiKey?: string;
   mockMode?: boolean;
-  theme?: {
-    primaryColor?: string;
-    logoSource?: number;
-  };
+  theme?: { primaryColor?: string; logoSource?: number };
 }
-
-export type OnboardingStep =
-  | 'login'
-  | 'login_otp'
-  | 'pin_login'
-  | 'set_pin'
-  | 'confirm_pin'
-  | 'complete'
-  | 'forgot_pin'
-  | 'forgot_otp'
-  | 'invite_code'
-  | '1c'
-  | '1d'
-  | '1e'
-  | '1f'
-  | 'registered';
-
-export type ActiveTab = 'card' | 'scan' | 'assignments' | 'transactions' | 'profile';
-export type MainScreen =
-  | 'home_empty'
-  | 'home_active'
-  | 'assignment_notification'
-  | 'pairing_code'
-  | 'assignment_accepted';
-export type SessionState =
-  | 'idle'
-  | 'scanning'
-  | 'confirmation'
-  | 'otp_entry'
-  | 'authorized'
-  | 'complete';
-export type TxnFilter = 'all' | 'successful' | 'failed';
 
 export interface MGLContextValue {
   config: MGLConfig;
@@ -116,3 +85,42 @@ export interface MGLContextValue {
   open: () => void;
   close: () => void;
 }
+
+export type SessionState = 'idle' | 'scanning' | 'confirmation' | 'otp_entry' | 'authorized' | 'complete';
+export type TxnFilter = 'all' | 'successful' | 'failed';
+
+export type SetPinMode = 'onboarding' | 'reset';
+
+export type AuthStackParamList = {
+  Login: undefined;
+  LoginOtp: undefined;
+  PinLogin: undefined;
+  ForgotPin: undefined;
+  ForgotOtp: undefined;
+  InviteCode: undefined;
+  InviteConfirm: undefined;
+  OnboardingOtp: undefined;
+  SetPin: { mode: SetPinMode };
+  ConfirmPin: { mode: SetPinMode };
+  Registered: undefined;
+};
+
+export type MainTabParamList = {
+  Home: undefined;
+  Scan: undefined;
+  Assignments: undefined;
+  Transactions: undefined;
+  Profile: undefined;
+};
+
+export type MainStackParamList = {
+  Tabs: NavigatorScreenParams<MainTabParamList>;
+  AssignmentNotification: { bindingId: string };
+  PairingCode: { bindingId: string };
+  AssignmentAccepted: { bindingId: string };
+};
+
+export type RootStackParamList = {
+  Auth: NavigatorScreenParams<AuthStackParamList>;
+  Main: NavigatorScreenParams<MainStackParamList>;
+};
