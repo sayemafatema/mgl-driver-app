@@ -14,19 +14,52 @@ A fleet CNG fueling management app for drivers. Allows drivers to authenticate, 
 ├── components/ui/      Shadcn/Radix UI components (unused by page.tsx)
 ├── public/             Static assets (mgl-logo.png, apple-icon.png)
 │
-mobile/                 Expo React Native app (produces APK + IPA)
+mobile/                 Expo React Native demo app (uses the SDK)
 ├── app/
-│   ├── index.tsx       Main RN app (converted from page.tsx)
+│   ├── index.tsx       SDK demo: <MGLProvider><MGLLaunchButton/><MGLModal/>
 │   └── _layout.tsx     Expo Router root layout
 ├── assets/             App icons and splash (mgl-logo.png, icon.png)
 ├── app.json            Expo config
 ├── eas.json            EAS Build profiles (preview APK/IPA, production)
 ├── package.json        Expo + NativeWind + lucide-react-native deps
-├── tailwind.config.js  NativeWind v4 Tailwind config
-├── babel.config.js     Expo Babel config with NativeWind plugin
-├── metro.config.js     Metro bundler with NativeWind wrapper
+├── babel.config.js     Expo Babel config
 └── MOBILE_BUILD.md     Step-by-step APK/IPA build instructions
+│
+sdk/                    @mgl/fleet-connect-sdk — publishable npm package
+├── package.json        name: @mgl/fleet-connect-sdk, tsup build
+├── tsconfig.json       TypeScript config (jsx: react-native)
+├── tsup.config.ts      Bundle config (CJS + ESM + types)
+└── src/
+    ├── index.ts        Barrel exports: MGLProvider, MGLLaunchButton, MGLModal, useMGL
+    ├── assets/
+    │   └── mgl-logo.png
+    ├── context/
+    │   └── MGLContext.tsx   MGLProvider + useMGL hook + MGLConfig type
+    └── components/
+        ├── MGLApp.tsx        Full app (all screens + state, extracted from mobile)
+        ├── MGLLaunchButton.tsx  Drop-in button — calls open() from context
+        └── MGLModal.tsx      Full-screen modal wrapping MGLApp
 ```
+
+## SDK Integration (App A)
+
+Any React Native app can embed the full MGL experience with three lines:
+
+```tsx
+import { MGLProvider, MGLLaunchButton, MGLModal } from '@mgl/fleet-connect-sdk';
+// or during development: from '../../sdk/src'
+
+export default function App() {
+  return (
+    <MGLProvider config={{ mockMode: true }}>
+      <MGLLaunchButton label="Open MGL Fleet Connect" />
+      <MGLModal />
+    </MGLProvider>
+  );
+}
+```
+
+The SDK is not yet published to npm — run `cd sdk && npm run build` to build the dist output locally.
 
 ## Running the Web App
 
