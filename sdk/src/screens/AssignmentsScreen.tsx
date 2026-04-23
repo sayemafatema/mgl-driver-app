@@ -1,28 +1,32 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { CheckCircle, Clock, Route, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react-native';
+import { CheckCircle, Clock, Route, ChevronRight, AlertCircle } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { useMGLApp } from '../context/MGLContext';
+import type { MainStackParamList } from '../types';
+
+type Nav = StackNavigationProp<MainStackParamList, 'Tabs'>;
 
 export function AssignmentsScreen() {
+  const navigation = useNavigation<Nav>();
   const {
     activeBindings, pendingBindings, repairBindings,
     expandPastAssignments, setExpandPastAssignments,
-    setActiveAssignment, setCurrentMainScreen,
-    bindings,
+    setActiveAssignment,
   } = useMGLApp();
 
   return (
     <View style={{ padding: 16, gap: 16 }}>
       <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>My Assignments</Text>
 
-      {/* Pending */}
       {pendingBindings.length > 0 && (
         <View style={{ gap: 8 }}>
           <Text style={{ fontSize: 13, fontWeight: '700', color: '#d97706', textTransform: 'uppercase', letterSpacing: 1 }}>Needs action</Text>
           {pendingBindings.map((b) => (
             <TouchableOpacity
               key={b.id}
-              onPress={() => { setActiveAssignment(b); setCurrentMainScreen('assignment_notification'); }}
+              onPress={() => { setActiveAssignment(b); navigation.navigate('AssignmentNotification', { bindingId: b.id }); }}
               activeOpacity={0.7}
               style={{ borderWidth: 2, borderColor: '#fde68a', borderRadius: 12, padding: 16, backgroundColor: '#fffbeb', gap: 8 }}
             >
@@ -43,14 +47,13 @@ export function AssignmentsScreen() {
         </View>
       )}
 
-      {/* Repair / Needs pairing */}
       {repairBindings.length > 0 && (
         <View style={{ gap: 8 }}>
           <Text style={{ fontSize: 13, fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1 }}>Pairing needed</Text>
           {repairBindings.map((b) => (
             <TouchableOpacity
               key={b.id}
-              onPress={() => { setActiveAssignment(b); setCurrentMainScreen('pairing_code'); }}
+              onPress={() => { setActiveAssignment(b); navigation.navigate('PairingCode', { bindingId: b.id }); }}
               activeOpacity={0.7}
               style={{ borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, padding: 16, backgroundColor: '#fef2f2', gap: 8 }}
             >
@@ -71,7 +74,6 @@ export function AssignmentsScreen() {
         </View>
       )}
 
-      {/* Active */}
       {activeBindings.length > 0 && (
         <View style={{ gap: 8 }}>
           <Text style={{ fontSize: 13, fontWeight: '700', color: '#15803d', textTransform: 'uppercase', letterSpacing: 1 }}>Active ({activeBindings.length})</Text>
