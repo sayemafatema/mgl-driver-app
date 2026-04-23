@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { useMGL } from '../context/MGLContext';
+import { MGLModal } from './MGLModal';
 
 interface MGLLaunchButtonProps {
   label?: string;
@@ -16,13 +17,16 @@ export function MGLLaunchButton({
   const { open } = useMGL();
 
   return (
-    <TouchableOpacity
-      onPress={open}
-      activeOpacity={0.8}
-      style={[styles.button, style]}
-    >
-      <Text style={[styles.text, textStyle]}>{label}</Text>
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity
+        onPress={open}
+        activeOpacity={0.8}
+        style={[styles.button, style]}
+      >
+        <Text style={[styles.text, textStyle]}>{label}</Text>
+      </TouchableOpacity>
+      <MGLModal />
+    </>
   );
 }
 
