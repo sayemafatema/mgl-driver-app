@@ -15,7 +15,7 @@ export interface Binding {
   authMode: AuthMode;
   state: BindingState;
   paired: boolean;
-  scanPayStatus: string;
+  scanPayStatus: ScanPayStatus;
   balance: number;
   cardBalance?: number;
   incentiveBalance?: number;
@@ -33,6 +33,11 @@ export interface Binding {
   repairReason?: string;
   assignedBy?: string;
   validPairingCode?: string;
+}
+
+export interface PendingBinding extends Binding {
+  state: 'PENDING_ACCEPTANCE';
+  assignedBy: string;
 }
 
 export interface Driver {
@@ -105,8 +110,9 @@ export type SessionState =
   | 'complete';
 export type TxnFilter = 'all' | 'successful' | 'failed';
 
-export interface DetailRow {
-  label: string;
-  value: string;
-  valueColor?: string;
+export interface MGLContextValue {
+  config: MGLConfig;
+  isOpen: boolean;
+  open: () => void;
+  close: () => void;
 }
