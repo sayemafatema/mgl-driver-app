@@ -1,21 +1,25 @@
 import React from 'react';
-import {
-  View, Text, TouchableOpacity, ScrollView, Modal, Pressable,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Modal, Pressable } from 'react-native';
 import { ChevronLeft, Clock, MapPin, AlertCircle } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { useMGLApp } from '../context/MGLContext';
+import type { MainStackParamList } from '../types';
+
+type Nav = StackNavigationProp<MainStackParamList, 'AssignmentNotification'>;
 
 export function AssignmentNotificationScreen() {
+  const navigation = useNavigation<Nav>();
   const {
-    assignment, setCurrentMainScreen, setActiveAssignment, activeAssignment,
-    showDeclineConfirm, setShowDeclineConfirm, declineBndId, setDeclineBndId, bindings,
+    assignment, setActiveAssignment,
+    showDeclineConfirm, setShowDeclineConfirm, setDeclineBndId,
   } = useMGLApp();
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <ScrollView contentContainerStyle={{ padding: 24, gap: 20 }}>
         <TouchableOpacity
-          onPress={() => { setActiveAssignment(null); setCurrentMainScreen('home_empty'); }}
+          onPress={() => { setActiveAssignment(null); navigation.goBack(); }}
           activeOpacity={0.7}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
         >
@@ -49,48 +53,24 @@ export function AssignmentNotificationScreen() {
               <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>{assignment.assignedBy || 'Fleet Manager'}</Text>
             </View>
             <View style={{ height: 1, backgroundColor: '#f3f4f6' }} />
-
             {assignment.authMode === 'vehicle_linked' && (
               <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
-                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' }}>
-                  <AlertCircle size={18} color="#15803d" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontWeight: '600', color: '#111827' }}>Vehicle-linked</Text>
-                  <Text style={{ fontSize: 14, color: '#4b5563', marginTop: 2 }}>Permanent assignment. Scan & Pay always available.</Text>
-                </View>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' }}><AlertCircle size={18} color="#15803d" /></View>
+                <View style={{ flex: 1 }}><Text style={{ fontWeight: '600', color: '#111827' }}>Vehicle-linked</Text><Text style={{ fontSize: 14, color: '#4b5563', marginTop: 2 }}>Permanent assignment. Scan & Pay always available.</Text></View>
               </View>
             )}
-
             {assignment.authMode === 'shift_based' && (
               <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
-                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
-                  <Clock size={18} color="#d97706" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontWeight: '600', color: '#111827' }}>Shift-based</Text>
-                  <Text style={{ fontSize: 14, color: '#4b5563', marginTop: 2 }}>
-                    {assignment.shiftDays?.join(', ')} · {assignment.shiftStart}–{assignment.shiftEnd}
-                  </Text>
-                </View>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}><Clock size={18} color="#d97706" /></View>
+                <View style={{ flex: 1 }}><Text style={{ fontWeight: '600', color: '#111827' }}>Shift-based</Text><Text style={{ fontSize: 14, color: '#4b5563', marginTop: 2 }}>{assignment.shiftDays?.join(', ')} · {assignment.shiftStart}–{assignment.shiftEnd}</Text></View>
               </View>
             )}
-
             {assignment.authMode === 'trip_linked' && (
               <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
-                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#dbeafe', alignItems: 'center', justifyContent: 'center' }}>
-                  <MapPin size={18} color="#1d4ed8" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontWeight: '600', color: '#111827' }}>Trip-linked</Text>
-                  <Text style={{ fontSize: 14, color: '#4b5563', marginTop: 2 }}>
-                    {assignment.tripDate} · {assignment.tripStart}–{assignment.tripEnd}
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#4b5563' }}>{assignment.origin} → {assignment.destination}</Text>
-                </View>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#dbeafe', alignItems: 'center', justifyContent: 'center' }}><MapPin size={18} color="#1d4ed8" /></View>
+                <View style={{ flex: 1 }}><Text style={{ fontWeight: '600', color: '#111827' }}>Trip-linked</Text><Text style={{ fontSize: 14, color: '#4b5563', marginTop: 2 }}>{assignment.tripDate} · {assignment.tripStart}–{assignment.tripEnd}</Text><Text style={{ fontSize: 14, color: '#4b5563' }}>{assignment.origin} → {assignment.destination}</Text></View>
               </View>
             )}
-
             <View style={{ height: 1, backgroundColor: '#f3f4f6' }} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={{ fontSize: 14, color: '#6b7280' }}>Spend limit per fueling</Text>
@@ -101,7 +81,7 @@ export function AssignmentNotificationScreen() {
 
         <View style={{ gap: 12 }}>
           <TouchableOpacity
-            onPress={() => setCurrentMainScreen('pairing_code')}
+            onPress={() => navigation.navigate('PairingCode', { bindingId: assignment.id })}
             activeOpacity={0.7}
             style={{ backgroundColor: '#15803d', borderRadius: 16, paddingVertical: 16, alignItems: 'center' }}
           >
@@ -118,14 +98,13 @@ export function AssignmentNotificationScreen() {
         </View>
       </ScrollView>
 
-      {/* Decline confirm modal */}
       <Modal visible={showDeclineConfirm} transparent animationType="slide" onRequestClose={() => setShowDeclineConfirm(false)}>
         <Pressable style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' }} onPress={() => setShowDeclineConfirm(false)}>
           <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, gap: 16 }}>
             <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827' }}>Decline this assignment?</Text>
             <Text style={{ fontSize: 14, color: '#4b5563' }}>Your Fleet Operator will be notified. This action cannot be undone.</Text>
             <TouchableOpacity
-              onPress={() => { setShowDeclineConfirm(false); setActiveAssignment(null); setCurrentMainScreen('home_empty'); }}
+              onPress={() => { setShowDeclineConfirm(false); setActiveAssignment(null); navigation.popToTop(); }}
               activeOpacity={0.7}
               style={{ backgroundColor: '#dc2626', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
             >
