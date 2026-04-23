@@ -1,13 +1,18 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { ChevronLeft, ChevronRight, QrCode, History, AlertCircle } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { useMGLApp } from '../context/MGLContext';
+import type { MainStackParamList } from '../types';
+
+type Nav = StackNavigationProp<MainStackParamList, 'Tabs'>;
 
 export function HomeScreen() {
+  const navigation = useNavigation<Nav>();
   const {
     activeCards, activeCard, setActiveCard, currentCard, pendingAssignmentCount,
-    setActiveTab, setSessionState, setActiveAssignment, setCurrentMainScreen,
-    bindings, mockTransactions,
+    setSessionState, setActiveAssignment, bindings, mockTransactions,
   } = useMGLApp();
 
   if (!currentCard) {
@@ -18,7 +23,7 @@ export function HomeScreen() {
         <Text style={{ fontSize: 14, color: '#6b7280', textAlign: 'center' }}>Accept an assignment to start using MGL Fleet Connect</Text>
         {pendingAssignmentCount > 0 && (
           <TouchableOpacity
-            onPress={() => setActiveTab('assignments')}
+            onPress={() => navigation.navigate('Tabs', { screen: 'Assignments' })}
             activeOpacity={0.7}
             style={{ backgroundColor: '#15803d', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 24 }}
           >
@@ -29,6 +34,8 @@ export function HomeScreen() {
     );
   }
 
+  const pendingBinding = bindings.find(b => b.state === 'PENDING_ACCEPTANCE');
+
   return (
     <View style={{ padding: 16, gap: 16 }}>
       {pendingAssignmentCount > 0 && (
@@ -37,13 +44,12 @@ export function HomeScreen() {
             <AlertCircle size={20} color="#d97706" />
             <Text style={{ fontSize: 14, fontWeight: '600', color: '#78350f' }}>{pendingAssignmentCount} assignment{pendingAssignmentCount > 1 ? 's' : ''} need your attention</Text>
           </View>
-          <TouchableOpacity onPress={() => setActiveTab('assignments')} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => navigation.navigate('Tabs', { screen: 'Assignments' })} activeOpacity={0.7}>
             <Text style={{ fontSize: 14, fontWeight: '600', color: '#15803d' }}>View</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Vehicle Card */}
       <View>
         <View style={{ backgroundColor: '#15803d', borderRadius: 16, overflow: 'hidden', minHeight: 160 }}>
           <View style={{ padding: 20, flex: 1, justifyContent: 'space-between' }}>
@@ -94,7 +100,6 @@ export function HomeScreen() {
         )}
       </View>
 
-      {/* Balance */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
         <Text style={{ fontSize: 11, color: '#9ca3af', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 2, textAlign: 'center' }}>Vehicle Balance</Text>
         <Text style={{ fontSize: 36, fontWeight: '700', textAlign: 'center', marginTop: 4 }}>₹{activeCards[activeCard]?.balance?.toLocaleString('en-IN')}</Text>
@@ -108,31 +113,31 @@ export function HomeScreen() {
         </Text>
       </View>
 
-      {/* Quick Actions */}
       <View style={{ flexDirection: 'row', gap: 12 }}>
-        <TouchableOpacity onPress={() => { setSessionState('scanning'); setActiveTab('scan'); }} activeOpacity={0.7} style={{ flex: 1, backgroundColor: '#f0fdf4', borderRadius: 12, padding: 16, alignItems: 'center', gap: 8 }}>
+        <TouchableOpacity onPress={() => { setSessionState('scanning'); navigation.navigate('Tabs', { screen: 'Scan' }); }} activeOpacity={0.7} style={{ flex: 1, backgroundColor: '#f0fdf4', borderRadius: 12, padding: 16, alignItems: 'center', gap: 8 }}>
           <QrCode size={24} color="#15803d" />
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#15803d' }}>Scan & Pay</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setActiveTab('transactions')} activeOpacity={0.7} style={{ flex: 1, backgroundColor: '#f9fafb', borderRadius: 12, padding: 16, alignItems: 'center', gap: 8 }}>
+        <TouchableOpacity onPress={() => navigation.navigate('Tabs', { screen: 'Transactions' })} activeOpacity={0.7} style={{ flex: 1, backgroundColor: '#f9fafb', borderRadius: 12, padding: 16, alignItems: 'center', gap: 8 }}>
           <History size={24} color="#6b7280" />
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#6b7280' }}>History</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => { setActiveAssignment(bindings[3]); setCurrentMainScreen('assignment_notification'); }}
-          activeOpacity={0.7}
-          style={{ flex: 1, backgroundColor: '#fffbeb', borderRadius: 12, padding: 16, alignItems: 'center', gap: 8 }}
-        >
-          <AlertCircle size={24} color="#d97706" />
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#d97706' }}>Assign</Text>
-        </TouchableOpacity>
+        {pendingBinding && (
+          <TouchableOpacity
+            onPress={() => { setActiveAssignment(pendingBinding); navigation.navigate('AssignmentNotification', { bindingId: pendingBinding.id }); }}
+            activeOpacity={0.7}
+            style={{ flex: 1, backgroundColor: '#fffbeb', borderRadius: 12, padding: 16, alignItems: 'center', gap: 8 }}
+          >
+            <AlertCircle size={24} color="#d97706" />
+            <Text style={{ fontSize: 14, fontWeight: '600', color: '#d97706' }}>Assign</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Recent Transactions */}
       <View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <Text style={{ fontWeight: '700', color: '#111827' }}>Recent transactions</Text>
-          <TouchableOpacity onPress={() => setActiveTab('transactions')} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => navigation.navigate('Tabs', { screen: 'Transactions' })} activeOpacity={0.7}>
             <Text style={{ fontSize: 14, color: '#15803d', fontWeight: '600' }}>See all</Text>
           </TouchableOpacity>
         </View>
